@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <boost/asio.hpp>
 #include "protocol.h"
 
@@ -19,7 +20,8 @@ int GetNewClientID()
 struct Player {
 	bool connected;
 	chrono::system_clock::time_point start_time;
-	class Session* my_session;
+	class Session* session;
+	string name;
 };
 
 Player players[MAX_USER];
@@ -42,7 +44,7 @@ private:
 		int packet_size = reinterpret_cast<unsigned char*>(packet)[0];
 		unsigned char* buff = new unsigned char[packet_size];
 		memcpy(buff, packet, packet_size);
-		players[id].my_session->Write(buff, packet_size);
+		players[id].session->Write(buff, packet_size);
 	}
 
 	void ProcessPacket(unsigned char* packet, int id)
@@ -52,21 +54,53 @@ private:
 		{
 			cout << "Recv Login Packet" << endl;
 			CS_LOGIN_PACKET* pkt = reinterpret_cast<CS_LOGIN_PACKET*>(packet);
-			cout << pkt->name << endl;
+			cout << pkt->name << "- login " << endl;
+			players[id].name = pkt->name;
 
-			SC_LOGIN_OK_PACKET p;
-			p.size = sizeof(SC_LOGIN_OK_PACKET);
-			p.type = SC_LOGIN_OK;
-			//SendPacket(&p, id);
-			players[id].my_session->Write(&p, p.size);
+			SC_LOGIN_OK_PACKET loginPacket;
+			loginPacket.size = sizeof(SC_LOGIN_OK_PACKET);
+			loginPacket.type = SC_LOGIN_OK;
+
+			SC_ENTER_PLAYER_PACKET enterPacket;
+			enterPacket.size = sizeof(SC_ENTER_PLAYER_PACKET);
+			enterPacket.type = SC_ENTER_PLAYER;
+			enterPacket.id = id;
+
+			// 들어온 애한테 로그인ㅇㅋ
+			players[id].session->Write(&loginPacket, loginPacket.size);
+
+			// 기존 애들한테 새로 드러온 애 정보
+			for (auto& player : players) {
+				if (!player.connected)  continue;
+				if (player.session->my_id == id) continue;
+				enterPacket.id = id;
+				player.session->Write(&enterPacket, enterPacket.size);
+				enterPacket.id = player.session->my_id;
+				players[id].session->Write(&enterPacket, enterPacket.size);
+			}
 		}
 		break;
+		case CS_CHAT:
+		{
+			cout << "Recv Chat Packet" << endl;
+			CS_CHAT_PACKET* pkt = reinterpret_cast<CS_CHAT_PACKET*>(packet);
+			
+			SC_CHAT_PACKET p;
+			p.size = sizeof(SC_CHAT_PACKET);
+			p.type = SC_CHAT;
+			p.id = id;
+			strcpy_s(p.name, players[id].name.c_str());
+			
+			for (auto& player : players) {
+				if (!player.connected) continue;
+				player.session->Write(&p, p.size);
+			}
+		}
 		}
 	}
 
 	void ProcessRead()
 	{
-		cout << "Process Read" << endl;
 		auto self(shared_from_this());
 
 		socket_.async_read_some(boost::asio::buffer(data, BUF_SIZE),
@@ -74,8 +108,8 @@ private:
 		{
 			if (ec)
 			{
-				if (ec.value() == boost::asio::error::operation_aborted) return;			// 더 이상 do_read 호출하지 않는다. session 객체를 pointing하지 않음 -> 기존 콜백함수를 다 호출하고 나면 session 객체는 날아감.
-				if (false == players[my_id].connected) return;								// 더 이상 do_read 호출하지 않는다. 접속종료
+				if (ec.value() == boost::asio::error::operation_aborted) return;		
+				if (false == players[my_id].connected) return;			
 				cout << "Receive Error on Session[" << my_id << "] EC[" << ec << "]\n";	// error. 
 				socket_.shutdown(socket_.shutdown_both);
 				socket_.close();
@@ -170,8 +204,6 @@ private:
 				{
 					if (length != bytes_transferred)
 						cout << "Incomplete Send occured on session[" << my_id << "]. This session should be closed.\n";
-					else
-						cout << "Send Complete" << endl;
 					//delete packet;
 				}
 			});
@@ -190,7 +222,7 @@ public:
 		my_id = GetNewClientID();
 		cout << "Client[" << my_id + 1 << "] Connected\n";
 
-		players[my_id].my_session = this;
+		players[my_id].session = this;
 		players[my_id].connected = true;
 
 		ProcessRead();

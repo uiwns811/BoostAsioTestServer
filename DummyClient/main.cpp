@@ -29,19 +29,38 @@ public:
 	{
 		socket.async_connect(endpoint, [this](boost::system::error_code ec) {
 			if (!ec) {
-				cout << "Connected to server." << endl;
-
-				CS_LOGIN_PACKET p;
-				p.size = sizeof(CS_LOGIN_PACKET);
-				p.type = CS_LOGIN;
-				strcpy_s(p.name, "TEST");
-				Write(&p, p.size);
-
-				ProcessRead();
+				OnConnected();
 			}
 			else
 				cout << "connect failed : " << ec.message() << endl;
 		});
+	}
+
+	void OnConnected()
+	{
+		cout << "Connected to server." << endl;
+
+		CS_LOGIN_PACKET p;
+		p.size = sizeof(CS_LOGIN_PACKET);
+		p.type = CS_LOGIN;
+		strcpy_s(p.name, "TEST");
+		Write(&p, p.size);
+
+		ProcessRead();
+
+		/*while (true) {
+			if (GetAsyncKeyState(VK_SHIFT) & 0x8000) {
+				cout << "Chatting : ";
+				char chat[CHAT_SIZE];
+				cin >> chat;
+				CS_CHAT_PACKET p;
+				p.size = sizeof(CS_CHAT_PACKET);
+				p.type = CS_CHAT;
+				strcpy_s(p.chat, chat);
+				Write(&p, p.size);
+			}
+			ProcessRead();
+		}*/
 	}
 
 	void Write(void* packet, std::size_t length)
@@ -59,16 +78,8 @@ public:
 
 	void ProcessRead()
 	{
-		cout << "Process Read" << endl;
 		socket.async_read_some(boost::asio::buffer(data, BUF_SIZE),
 			[this](boost::system::error_code ec, std::size_t length) {
-				cout << "Recv Callback" << endl;
-				//int data_to_process = static_cast<int>(length);
-				//if (data_to_process > 0)
-				//	ProcessData(data, data_to_process);
-
-				//cout << "Completed Read" << endl;
-				//ProcessRead();
 				int data_to_process = static_cast<int>(length);
 				unsigned char* buf = data;
 				while (0 < data_to_process) {
@@ -125,12 +136,23 @@ public:
 	
 	void ProcessPacket(unsigned char* packet)
 	{
-		cout << "ProcessPakcet" << endl;
 		switch (packet[1])
 		{
 		case SC_LOGIN_OK:
 		{
 			cout << "Login OK" << endl;
+		}
+		break;
+		case SC_ENTER_PLAYER:
+		{
+			SC_ENTER_PLAYER_PACKET* p = reinterpret_cast<SC_ENTER_PLAYER_PACKET*>(packet);
+			cout << "new player [" << p->id << "] enter!" << endl;
+		}
+		break;
+		case SC_CHAT:
+		{
+			SC_CHAT_PACKET* p = reinterpret_cast<SC_CHAT_PACKET*>(packet);
+			cout << "[CHAT] " << p->name << " : " << p->chat << endl;
 		}
 		break;
 		}
@@ -145,6 +167,10 @@ int main()
 	Client client(io_context, endpoint);
 
 	client.Connect();
-
+	
 	io_context.run();
+
+
+	cout << "Á¾·á" << endl;
+	return 0;
 }
