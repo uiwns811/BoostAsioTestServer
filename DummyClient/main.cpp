@@ -1,11 +1,10 @@
 #include <iostream>
 #include <string>
+#include <boost/asio.hpp>
+#include <boost/thread.hpp>
 #include "../AsioTest/protocol.h"
 
-#include <boost/asio.hpp>
-
 using namespace std;
-
 using boost::asio::ip::tcp;
 
 class Client
@@ -19,10 +18,19 @@ private:
 	int cur_packet_size;
 	int prev_data_size;
 
+	string m_name;
+
 public:
 	Client(boost::asio::io_context& io_context, const tcp::endpoint& endpoints) : socket(io_context), endpoint(endpoints)
 	{
-		
+		cout << "ID 입력 : ";
+		cin >> m_name;
+		Connect();
+	}
+
+	Client(boost::asio::io_context& io_context) : socket(io_context) 
+	{
+
 	}
 
 	void Connect()
@@ -38,29 +46,11 @@ public:
 
 	void OnConnected()
 	{
-		cout << "Connected to server." << endl;
+		cout << "Connected to server" << endl;
 
-		CS_LOGIN_PACKET p;
-		p.size = sizeof(CS_LOGIN_PACKET);
-		p.type = CS_LOGIN;
-		strcpy_s(p.name, "TEST");
-		Write(&p, p.size);
+		SendLoginPacket(m_name);
 
 		ProcessRead();
-
-		/*while (true) {
-			if (GetAsyncKeyState(VK_SHIFT) & 0x8000) {
-				cout << "Chatting : ";
-				char chat[CHAT_SIZE];
-				cin >> chat;
-				CS_CHAT_PACKET p;
-				p.size = sizeof(CS_CHAT_PACKET);
-				p.type = CS_CHAT;
-				strcpy_s(p.chat, chat);
-				Write(&p, p.size);
-			}
-			ProcessRead();
-		}*/
 	}
 
 	void Write(void* packet, std::size_t length)
@@ -70,7 +60,6 @@ public:
 			{
 				if (!ec)
 				{
-					cout << "Send Complete" << endl;
 					//delete packet;
 				}
 			});
@@ -85,7 +74,7 @@ public:
 				while (0 < data_to_process) {
 					if (0 == cur_packet_size) {
 						cur_packet_size = buf[0];
-						if (buf[0] > 200) {
+						if (buf[0] > 200) {   
 							cout << "Invalid Packet Size [ << buf[0] << ] Terminating Server!\n";
 							exit(-1);
 						}
@@ -140,13 +129,13 @@ public:
 		{
 		case SC_LOGIN_OK:
 		{
-			cout << "Login OK" << endl;
+			cout << "로그인 완료!" << endl;
 		}
 		break;
 		case SC_ENTER_PLAYER:
 		{
 			SC_ENTER_PLAYER_PACKET* p = reinterpret_cast<SC_ENTER_PLAYER_PACKET*>(packet);
-			cout << "new player [" << p->id << "] enter!" << endl;
+			cout << "New Client [" << p->name << "] enter!" << endl;
 		}
 		break;
 		case SC_CHAT:
@@ -157,7 +146,35 @@ public:
 		break;
 		}
 	}
+
+	void SendLoginPacket(string name)
+	{
+		CS_LOGIN_PACKET p;
+		p.size = sizeof(CS_LOGIN_PACKET);
+		p.type = CS_LOGIN;
+		strcpy_s(p.name, name.c_str());
+		Write(&p, p.size);
+	}
+
+	void SendChatPacket(string chat)
+	{
+		CS_CHAT_PACKET p;
+		p.size = sizeof(CS_CHAT_PACKET);
+		p.type = CS_CHAT;
+		strcpy_s(p.chat, chat.c_str());
+		Write(&p, p.size);
+	}
 };
+
+void worker_thread(boost::asio::io_context* io_context)
+{
+	try {
+		io_context->run();
+	}
+	catch (std::exception& e) {
+		std::cerr << "Exception: " << e.what() << std::endl;
+	}
+}
 
 int main()
 {
@@ -166,10 +183,16 @@ int main()
 
 	Client client(io_context, endpoint);
 
-	client.Connect();
-	
-	io_context.run();
+	boost::thread* th = new boost::thread(worker_thread, &io_context);
 
+	while (true) {
+		string msg;
+		getline(cin, msg);
+		client.SendChatPacket(msg);
+	}
+
+	th->join();
+	delete th;
 
 	cout << "종료" << endl;
 	return 0;

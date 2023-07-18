@@ -52,9 +52,8 @@ private:
 		switch (packet[1]) {
 		case CS_LOGIN: 
 		{
-			cout << "Recv Login Packet" << endl;
 			CS_LOGIN_PACKET* pkt = reinterpret_cast<CS_LOGIN_PACKET*>(packet);
-			cout << pkt->name << "- login " << endl;
+			cout << pkt->name << "가 로그인 " << endl;
 			players[id].name = pkt->name;
 
 			SC_LOGIN_OK_PACKET loginPacket;
@@ -82,7 +81,6 @@ private:
 		break;
 		case CS_CHAT:
 		{
-			cout << "Recv Chat Packet" << endl;
 			CS_CHAT_PACKET* pkt = reinterpret_cast<CS_CHAT_PACKET*>(packet);
 			
 			SC_CHAT_PACKET p;
@@ -90,7 +88,8 @@ private:
 			p.type = SC_CHAT;
 			p.id = id;
 			strcpy_s(p.name, players[id].name.c_str());
-			
+			strcpy_s(p.chat, pkt->chat);
+
 			for (auto& player : players) {
 				if (!player.connected) continue;
 				player.session->Write(&p, p.size);
@@ -220,7 +219,7 @@ public:
 	void start()
 	{
 		my_id = GetNewClientID();
-		cout << "Client[" << my_id + 1 << "] Connected\n";
+		cout << "New Client [" << my_id + 1 << "] Connected !\n";
 
 		players[my_id].session = this;
 		players[my_id].connected = true;
