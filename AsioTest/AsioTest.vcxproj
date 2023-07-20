@@ -131,10 +131,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ClientSession.cpp" />
+    <ClCompile Include="GameServer.cpp" />
+    <ClCompile Include="IServer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Room.cpp" />
+    <ClCompile Include="Session.cpp" />
+    <ClCompile Include="SessionManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ClientSession.h" />
+    <ClInclude Include="GameServer.h" />
+    <ClInclude Include="IServer.h" />
     <ClInclude Include="protocol.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Room.h" />
+    <ClInclude Include="SessionManager.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="TSingleton.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="AsioTest.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -141,7 +141,7 @@ public:
 		case SC_CHAT:
 		{
 			SC_CHAT_PACKET* p = reinterpret_cast<SC_CHAT_PACKET*>(packet);
-			cout << "[CHAT] " << p->name << " : " << p->chat << endl;
+			cout << "[" << p->name << "] : " << p->chat << endl;
 		}
 		break;
 		}
