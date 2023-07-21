@@ -1,7 +1,8 @@
 #pragma once
 #include "stdafx.h"
 
-class ClientSession : public std::enable_shared_from_this<ClientSession>
+class Room;
+class ClientSession : public enable_shared_from_this<ClientSession>
 {
 private:
 	tcp::socket m_socket;
@@ -14,6 +15,7 @@ private:
 public:
 	int m_id;
 	string m_name;
+	shared_ptr<Room> m_room;
 
 private:
 	void ProcessPacket(unsigned char* packet, int id);

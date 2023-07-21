@@ -1,5 +1,7 @@
 #include "ClientSession.h"
 #include "SessionManager.h"
+#include "RoomManager.h"
+#include "Room.h"
 
 void ClientSession::ProcessConnect()
 {
@@ -8,11 +10,18 @@ void ClientSession::ProcessConnect()
 	RegisterRecv();
 
 	// 룸 로직 처리
+	//shared_ptr<Room> room = make_shared<Room>();
+	//room->m_id = RoomManager::GetInstance()->CreateRoom(room);
+	//room->EnterPlayer(shared_from_this());
+	RoomManager::GetInstance()->CreateRoom();
 }
 
 void ClientSession::ProcessDisconnect()
 {
 	SessionManager::GetInstance()->RemoveClient(m_id);
+	if (m_room != nullptr) {
+		m_room->LeavePlayer(shared_from_this());
+	}
 	m_socket.shutdown(m_socket.shutdown_both);
 	m_socket.close();
 }
@@ -83,9 +92,9 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 		loginPacket.size = sizeof(SC_LOGIN_OK_PACKET);
 		loginPacket.type = SC_LOGIN_OK;
 
-		SC_ENTER_PLAYER_PACKET enterPacket;
-		enterPacket.size = sizeof(SC_ENTER_PLAYER_PACKET);
-		enterPacket.type = SC_ENTER_PLAYER;
+		SC_ENTER_LOBBY_PACKET enterPacket;
+		enterPacket.size = sizeof(SC_ENTER_LOBBY_PACKET);
+		enterPacket.type = SC_ENTER_LOBBY;
 		enterPacket.id = id;
 		strcpy_s(enterPacket.name, m_name.c_str());
 
@@ -109,27 +118,42 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 			//SendPacket(&enterPacket, id);
 			RegisterSend(&enterPacket, enterPacket.size);
 		}
+
+		// Room Info
+		SC_ROOM_INFO_PACKET roomPacket;
+		roomPacket.size = sizeof(SC_ROOM_INFO_PACKET);
+		roomPacket.type = SC_ROOM_INFO;
+		vector<RoomInfo> curRoomInfo = RoomManager::GetInstance()->GetRoomInfo();
+		for (int i = 0; i < curRoomInfo.size(); i++) {
+			roomPacket.roomList[i] = curRoomInfo[i];
+		}
+		RegisterSend(&roomPacket, roomPacket.size);
+	}
+	break;   
+	case CS_SELECT_ROOM :
+	{
+		CS_SELECT_ROOM_PACKET* p = reinterpret_cast<CS_SELECT_ROOM_PACKET*>(packet);
+		cout << m_name<< "이 "<< p->room_id << "번 방을 선택함" << endl;
+
+		RoomManager::GetInstance()->GetRoom(p->room_id)->EnterPlayer(shared_from_this());
+		
+		m_room->SendEnterRoomPacket(id);
 	}
 	break;
 	case CS_CHAT:
 	{
-		CS_CHAT_PACKET* pkt = reinterpret_cast<CS_CHAT_PACKET*>(packet);
+		CS_CHAT_PACKET* p = reinterpret_cast<CS_CHAT_PACKET*>(packet);
+		//m_lock.lock();
+		//unordered_map<int, shared_ptr<ClientSession>> curClient = SessionManager::GetInstance()->GetClients();
+		//m_lock.unlock();
+		//for (auto& client : curClient) {
+		//	//SendPacket(&p, client.first);
+		//	client.second->RegisterSend(&p, p.size);
+		//}
 
-		SC_CHAT_PACKET p;
-		p.size = sizeof(SC_CHAT_PACKET);
-		p.type = SC_CHAT;
-		p.id = id;
-		strcpy_s(p.name, SessionManager::GetInstance()->FindClient(id)->m_name.c_str());
-		strcpy_s(p.chat, pkt->chat);
-
-		m_lock.lock();
-		unordered_map<int, shared_ptr<ClientSession>> curClient = SessionManager::GetInstance()->GetClients();
-		m_lock.unlock();
-		for (auto& client : curClient) {
-			//SendPacket(&p, client.first);
-			client.second->RegisterSend(&p, p.size);
-		}
+		m_room->SendChatPacket(id, p->chat);
 	}
+	break;
 	}
 }
 

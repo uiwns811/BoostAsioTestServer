@@ -136,6 +136,7 @@
     <ClCompile Include="IServer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Room.cpp" />
+    <ClCompile Include="RoomManager.cpp" />
     <ClCompile Include="Session.cpp" />
     <ClCompile Include="SessionManager.cpp" />
   </ItemGroup>
@@ -146,6 +147,7 @@
     <ClInclude Include="protocol.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Room.h" />
+    <ClInclude Include="RoomManager.h" />
     <ClInclude Include="SessionManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TSingleton.h" />

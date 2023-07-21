@@ -7,6 +7,8 @@
 using namespace std;
 using boost::asio::ip::tcp;
 
+bool isChatting = false;
+
 class Client
 {
 private:
@@ -74,10 +76,6 @@ public:
 				while (0 < data_to_process) {
 					if (0 == cur_packet_size) {
 						cur_packet_size = buf[0];
-						if (buf[0] > 200) {   
-							cout << "Invalid Packet Size [ << buf[0] << ] Terminating Server!\n";
-							exit(-1);
-						}
 					}
 					int need_to_build = cur_packet_size - prev_data_size;
 					if (need_to_build <= data_to_process) {
@@ -132,10 +130,34 @@ public:
 			cout << "로그인 완료!" << endl;
 		}
 		break;
-		case SC_ENTER_PLAYER:
+		case SC_ENTER_LOBBY:
 		{
-			SC_ENTER_PLAYER_PACKET* p = reinterpret_cast<SC_ENTER_PLAYER_PACKET*>(packet);
+			SC_ENTER_LOBBY_PACKET* p = reinterpret_cast<SC_ENTER_LOBBY_PACKET*>(packet);
 			cout << "New Client [" << p->name << "] enter!" << endl;
+		}
+		break;
+		case SC_ROOM_INFO:
+		{
+			SC_ROOM_INFO_PACKET* p = reinterpret_cast<SC_ROOM_INFO_PACKET*>(packet);
+			for (auto& info : p->roomList) {
+				cout << "Room[" << info.room_id << "] - 현재 " << info.cur_user_cnt << "명 접속 중" << endl;
+			}
+			cout << "SELECT NUMBER or CREATEROOM (C키) : ";
+			int roomid;
+			cin >> roomid;
+
+			CS_SELECT_ROOM_PACKET pkt;
+			pkt.size = sizeof(CS_SELECT_ROOM_PACKET);
+			pkt.type = CS_SELECT_ROOM;
+			pkt.room_id = roomid;
+			Write(&pkt, pkt.size);
+		}
+		break;
+		case SC_ENTER_ROOM:
+		{
+			SC_ENTER_ROOM_PACKET* p = reinterpret_cast<SC_ENTER_ROOM_PACKET*>(packet);
+			cout << "player [" << p->client_id << "]가 Room[" << p->room_id << "]에 입장하였습니다" << endl;
+			isChatting = true;
 		}
 		break;
 		case SC_CHAT:
@@ -186,9 +208,11 @@ int main()
 	boost::thread* th = new boost::thread(worker_thread, &io_context);
 
 	while (true) {
-		string msg;
-		getline(cin, msg);
-		client.SendChatPacket(msg);
+		if (isChatting) {
+			string msg;
+			getline(cin, msg);
+			client.SendChatPacket(msg);
+		}
 	}
 
 	th->join();

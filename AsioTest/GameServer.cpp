@@ -20,14 +20,7 @@ void GameServer::Run(boost::asio::io_context* io_context)
 	
 void GameServer::RegisterAccept()
 {
-	//m_acceptor.async_accept(m_socket, [this](boost::system::error_code ec)
-	//	{
-	//		if (!ec) {
-	//			OnAccept();
-	//		}
-	//	});
 	m_acceptor.async_accept(m_socket, boost::bind(&GameServer::ProcessAccept, this, boost::asio::placeholders::error));
-
 }
 
 void GameServer::ProcessAccept(const boost::system::error_code& ec)
