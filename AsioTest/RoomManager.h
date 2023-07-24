@@ -5,7 +5,6 @@
 class Room;
 class RoomManager : public TSingleton<RoomManager>
 {
-private:
 	vector<shared_ptr<Room>> roomList;
 	unordered_map<int, shared_ptr<Room>> rooms;
 	mutex m_lock;
@@ -14,6 +13,7 @@ private:
 public:
 	int CreateRoom(const shared_ptr<Room>& room);
 	void CreateRoom();
+	void CreateRoom(int id);
 	void RemoveRoom(int id);
 
 	vector<RoomInfo> GetRoomInfo();

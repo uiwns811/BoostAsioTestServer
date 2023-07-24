@@ -15,7 +15,7 @@ private:
 public:
 	int m_id;
 	string m_name;
-	shared_ptr<Room> m_room;
+	weak_ptr<Room> m_room;
 
 private:
 	void ProcessPacket(unsigned char* packet, int id);
@@ -35,7 +35,6 @@ public:
 	void RegisterRecv();
 	
 	void ProcessRecv(const boost::system::error_code& ec, std::size_t length);
-	void ProcessSend(const boost::system::error_code& ec, std::size_t length);
 	void ProcessConnect();
 	void ProcessDisconnect();
 };

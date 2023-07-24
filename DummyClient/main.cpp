@@ -133,7 +133,7 @@ public:
 		case SC_ENTER_LOBBY:
 		{
 			SC_ENTER_LOBBY_PACKET* p = reinterpret_cast<SC_ENTER_LOBBY_PACKET*>(packet);
-			cout << "New Client [" << p->name << "] enter!" << endl;
+			cout << "New Client [" << p->name << "] Connected!" << endl;
 		}
 		break;
 		case SC_ROOM_INFO:
@@ -142,15 +142,26 @@ public:
 			for (auto& info : p->roomList) {
 				cout << "Room[" << info.room_id << "] - 현재 " << info.cur_user_cnt << "명 접속 중" << endl;
 			}
-			cout << "SELECT NUMBER or CREATEROOM (C키) : ";
-			int roomid;
-			cin >> roomid;
-
-			CS_SELECT_ROOM_PACKET pkt;
-			pkt.size = sizeof(CS_SELECT_ROOM_PACKET);
-			pkt.type = CS_SELECT_ROOM;
-			pkt.room_id = roomid;
-			Write(&pkt, pkt.size);
+			cout << "방을 생성하려면 0, 입장하려면 생성된 방의 id를 입력하세용";
+			int input;
+			cin >> input;
+			if (input != 0) {
+				CS_SELECT_ROOM_PACKET pkt;
+				pkt.size = sizeof(CS_SELECT_ROOM_PACKET);
+				pkt.type = CS_SELECT_ROOM;
+				pkt.room_id = input;
+				Write(&pkt, pkt.size);
+			}
+			else {
+				cout << "생성할 방의 id 입력 : ";
+				int roomid; 
+				cin >> roomid;
+				CS_CREATE_ROOM_PACKET pkt;
+				pkt.size = sizeof(CS_CREATE_ROOM_PACKET);
+				pkt.type = CS_CREATE_ROOM;
+				pkt.room_id = roomid;
+				Write(&pkt, pkt.size);
+			}
 		}
 		break;
 		case SC_ENTER_ROOM:
@@ -211,7 +222,8 @@ int main()
 		if (isChatting) {
 			string msg;
 			getline(cin, msg);
-			client.SendChatPacket(msg);
+			if (msg != "\0")
+				client.SendChatPacket(msg);
 		}
 	}
 

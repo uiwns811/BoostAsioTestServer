@@ -5,7 +5,6 @@ void Room::EnterPlayer(const shared_ptr<ClientSession>& session)
 {
 	cout << session->m_name << "이 방[" << m_id << "]에 입장하심" << endl;
 	m_lock.lock();
-	//clients.emplace_back(session);
 	clients[session->m_id] = session;
 	session->m_room = shared_from_this();
 	m_lock.unlock();
@@ -18,18 +17,9 @@ void Room::EnterPlayer(const shared_ptr<ClientSession>& session)
 void Room::LeavePlayer(const shared_ptr<ClientSession>& session)
 {
 	m_lock.lock();
-	//for (auto iter = clients.begin(); iter != clients.end(); iter++) {
-	//	if (iter->get()->m_id == session->m_id) {
-	//		clients.erase(iter);
-	//		session->m_room = nullptr;
-	//		m_lock.unlock();
-	//		return;
-	//	}
-	//}
 	for (auto& client : clients) {
 		if (client.first == session->m_id) {
 			clients.erase(client.first);
-			session->m_room = nullptr;
 			m_lock.unlock();
 			return;
 		}

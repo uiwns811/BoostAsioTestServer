@@ -6,6 +6,7 @@ int SessionManager::AddClient(const shared_ptr<ClientSession>& session)
 	m_lock.lock();
 	int new_id = m_client_id++;
 	clients[new_id] = session;
+	clients[new_id]->m_id = new_id;
 	m_lock.unlock();
 	return new_id;
 }

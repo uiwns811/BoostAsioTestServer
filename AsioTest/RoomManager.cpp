@@ -15,13 +15,31 @@ int RoomManager::CreateRoom(const shared_ptr<Room>& room)
 
 void RoomManager::CreateRoom()
 {
-	if (roomList.size() >= MAX_ROOM_SIZE) {
+	if (rooms.size() >= MAX_ROOM_SIZE) {
 		cout << "더이상 Room을 생성할 수 없음" << endl;
 	}
 	m_lock.lock();
 	int roomId = m_room_id++;
+	while (rooms.find(roomId) != rooms.end()) {
+		roomId++;
+	}
 	rooms[roomId] = make_shared<Room>();
 	rooms[roomId]->m_id = roomId;
+	m_lock.unlock();
+}
+
+void RoomManager::CreateRoom(int id)
+{
+	if (rooms.size() >= MAX_ROOM_SIZE) {
+		cout << "더이상 Room을 생성할 수 없음" << endl;
+	}
+	m_lock.lock();
+	if (rooms.find((id)) != rooms.end()) {
+		m_lock.unlock();
+		return;
+	}
+	rooms[id] = make_shared<Room>();
+	rooms[id]->m_id = id;
 	m_lock.unlock();
 }
 
@@ -53,6 +71,9 @@ vector<RoomInfo> RoomManager::GetRoomInfo()
 
 shared_ptr<Room> RoomManager::GetRoom(int id)
 {
+	if (rooms.find(id) == rooms.end()) {
+		CreateRoom(id);
+	}
 	m_lock.lock();
 	shared_ptr<Room> room = rooms[id]->shared_from_this();
 	m_lock.unlock();

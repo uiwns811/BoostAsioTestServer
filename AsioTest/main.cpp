@@ -14,7 +14,9 @@ int main()
 
 	try {
 		GameServer server(io_context, SERVER_PORT);
+		server.Init();
 		server.Run(&io_context);
+		server.Shutdown();
 		return 0;
 	}
 	catch (exception& ex)
