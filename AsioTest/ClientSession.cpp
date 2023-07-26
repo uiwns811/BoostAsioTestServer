@@ -21,6 +21,13 @@ void ClientSession::ProcessDisconnect()
 	m_socket.close();
 }
 
+void ClientSession::RegisterRecv()
+{
+	m_socket.async_read_some(boost::asio::buffer(data, BUF_SIZE), 
+		boost::bind(&ClientSession::ProcessRecv, shared_from_this(), 
+			boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+}
+
 void ClientSession::ProcessRecv(const boost::system::error_code& ec, std::size_t length)
 {
 	if (ec)
@@ -30,16 +37,9 @@ void ClientSession::ProcessRecv(const boost::system::error_code& ec, std::size_t
 		cout << "Receive Error on Session[" << m_id << "] EC[" << ec << "]\n";	// error. 
 		ProcessDisconnect();
 		return;
-	}    
+	}
 	ConstructData(data, length);
 	RegisterRecv();
-}
-
-void ClientSession::RegisterRecv()
-{
-	m_socket.async_read_some(boost::asio::buffer(data, BUF_SIZE), 
-		boost::bind(&ClientSession::ProcessRecv, shared_from_this(), 
-			boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 void ClientSession::ConstructData(unsigned char* buf, size_t io_byte)
@@ -90,23 +90,6 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 		//SendPacket(&loginPacket, m_id);
 		RegisterSend(&loginPacket, loginPacket.size);
 
-		//m_lock.lock();
-		//unordered_map<int, shared_ptr<ClientSession>> curClient = SessionManager::GetInstance()->GetClients();
-		//m_lock.unlock();
-
-		//// 기존 애들한테 새로 드러온 애 정보
-		//for (auto& client : curClient) {
-		//	if (client.first == id) continue;
-		//	enterPacket.id = id;
-		//	strcpy_s(enterPacket.name, m_name.c_str());
-		//	//SendPacket(&enterPacket, client.first);
-		//	client.second->RegisterSend(&enterPacket, enterPacket.size);
-		//	enterPacket.id = client.first;
-		//	strcpy_s(enterPacket.name, client.second->m_name.c_str());
-		//	//SendPacket(&enterPacket, id);
-		//	RegisterSend(&enterPacket, enterPacket.size);
-		//}
-
 		// Room Info
 		SC_ROOM_INFO_PACKET roomPacket;
 		memset(&roomPacket, NULL, sizeof(SC_ROOM_INFO_PACKET));
@@ -117,6 +100,7 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 			roomPacket.roomList[i] = curRoomInfo[i];
 		}
 		RegisterSend(&roomPacket, roomPacket.size);
+		// 포인터로  안해도 되나?
 	}
 	break;   
 	case CS_SELECT_ROOM :
@@ -144,16 +128,6 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 		}
 	}
 	break;
-	case CS_CREATE_ROOM: 
-	{
-		CS_CREATE_ROOM_PACKET* p = reinterpret_cast<CS_CREATE_ROOM_PACKET*>(packet);
-		int roomid = p->room_id;
-		RoomManager::GetInstance()->CreateRoom(roomid);
-		RoomManager::GetInstance()->GetRoom(roomid)->EnterPlayer(shared_from_this());
-		shared_ptr<Room> room = m_room.lock();
-		room->SendEnterRoomPacket(id);
-	}
-	break;
 	case CS_CHAT:
 	{
 		CS_CHAT_PACKET* p = reinterpret_cast<CS_CHAT_PACKET*>(packet);
@@ -167,9 +141,6 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 
 void ClientSession::RegisterSend(void* packet, std::size_t length)
 {
-	//m_socket.async_write_some(boost::asio::buffer(packet, length), 
-	//	boost::bind(&ClientSession::ProcessSend, shared_from_this(), 
-	//		boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 	auto self(shared_from_this());
 	m_socket.async_write_some(boost::asio::buffer(packet, length),
 		[this, self, packet, length](boost::system::error_code ec, std::size_t bytes_transferred)

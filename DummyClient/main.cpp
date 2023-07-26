@@ -136,6 +136,12 @@ public:
 			cout << "New Client [" << p->name << "] Connected!" << endl;
 		}
 		break;
+		case SC_LEAVE_PLAYER:
+		{
+			SC_LEAVE_PLAYER_PACKET* p = reinterpret_cast<SC_LEAVE_PLAYER_PACKET*>(packet);
+			cout << "player [" << p->name << "] 접속 종료" << endl;
+		}
+		break;
 		case SC_ROOM_INFO:
 		{
 			SC_ROOM_INFO_PACKET* p = reinterpret_cast<SC_ROOM_INFO_PACKET*>(packet);
@@ -145,23 +151,11 @@ public:
 			cout << "방을 생성하려면 0, 입장하려면 생성된 방의 id를 입력하세용";
 			int input;
 			cin >> input;
-			if (input != 0) {
-				CS_SELECT_ROOM_PACKET pkt;
-				pkt.size = sizeof(CS_SELECT_ROOM_PACKET);
-				pkt.type = CS_SELECT_ROOM;
-				pkt.room_id = input;
-				Write(&pkt, pkt.size);
-			}
-			else {
-				cout << "생성할 방의 id 입력 : ";
-				int roomid; 
-				cin >> roomid;
-				CS_CREATE_ROOM_PACKET pkt;
-				pkt.size = sizeof(CS_CREATE_ROOM_PACKET);
-				pkt.type = CS_CREATE_ROOM;
-				pkt.room_id = roomid;
-				Write(&pkt, pkt.size);
-			}
+			CS_SELECT_ROOM_PACKET pkt;
+			pkt.size = sizeof(CS_SELECT_ROOM_PACKET);
+			pkt.type = CS_SELECT_ROOM;
+			pkt.room_id = input;
+			Write(&pkt, pkt.size);
 		}
 		break;
 		case SC_ENTER_ROOM:

@@ -8,7 +8,8 @@ private:
 	mutex m_lock;
 
 public:
-	unordered_map<int, shared_ptr<ClientSession>> clients;
+	vector<pair<int, shared_ptr<ClientSession>>> clients;
+	//unordered_map<int, shared_ptr<ClientSession>> clients;
 	int m_id;
 
 public:

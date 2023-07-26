@@ -7,7 +7,7 @@ int RoomManager::CreateRoom(const shared_ptr<Room>& room)
 		cout << "더이상 Room을 생성할 수 없음" << endl;
 	}
 	m_lock.lock();
-	roomList.emplace_back(room);
+	roomList.emplace_back(room->shared_from_this());
 	m_lock.unlock();
 	int roomId = find(roomList.begin(), roomList.end(), room) - roomList.begin();
 	return roomId;
@@ -20,11 +20,13 @@ void RoomManager::CreateRoom()
 	}
 	m_lock.lock();
 	int roomId = m_room_id++;
-	while (rooms.find(roomId) != rooms.end()) {
+	while (binary_search(rooms.begin(), rooms.end(), roomId, Compare())) {
 		roomId++;
 	}
-	rooms[roomId] = make_shared<Room>();
-	rooms[roomId]->m_id = roomId;
+	pair<int, shared_ptr<Room>> room = make_pair(roomId, make_shared<Room>());
+	rooms.emplace_back(room);
+	room.second->m_id = roomId;
+	sort(rooms.begin(), rooms.end());
 	m_lock.unlock();
 }
 
@@ -34,12 +36,13 @@ void RoomManager::CreateRoom(int id)
 		cout << "더이상 Room을 생성할 수 없음" << endl;
 	}
 	m_lock.lock();
-	if (rooms.find((id)) != rooms.end()) {
+	if (binary_search(rooms.begin(), rooms.end(), id, Compare())) {
 		m_lock.unlock();
 		return;
 	}
-	rooms[id] = make_shared<Room>();
-	rooms[id]->m_id = id;
+	pair<int, shared_ptr<Room>> room = make_pair(id, make_shared<Room>());
+	rooms.emplace_back(room);
+	room.second->m_id = id;
 	m_lock.unlock();
 }
 
@@ -47,7 +50,9 @@ void RoomManager::RemoveRoom(int id)
 {
 	m_lock.lock();
 	//roomList.erase(roomList.begin() + id);
-	rooms.erase(id);
+	rooms.erase(remove_if(rooms.begin(), rooms.end(), 
+		[id](const pair<int, shared_ptr<Room>>& room) {return room.first == id; }));
+	cout << "Room[" << id << "]가 삭제되었습니다";
 	m_lock.unlock();
 }
 
@@ -71,11 +76,12 @@ vector<RoomInfo> RoomManager::GetRoomInfo()
 
 shared_ptr<Room> RoomManager::GetRoom(int id)
 {
-	if (rooms.find(id) == rooms.end()) {
+	if (false == binary_search(rooms.begin(), rooms.end(), id, Compare())) {
 		CreateRoom(id);
 	}
 	m_lock.lock();
-	shared_ptr<Room> room = rooms[id]->shared_from_this();
+	auto room = find_if(rooms.begin(), rooms.end(),
+		[id](const pair<int, shared_ptr<Room>>& pair) {return pair.first == id; });
 	m_lock.unlock();
-	return room;
+	return room->second;
 }

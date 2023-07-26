@@ -11,7 +11,6 @@ const int MAX_ROOM_SIZE = 10;
 const char CS_LOGIN = 1;
 const char CS_LEAVE_PLAYER = 2;
 const char CS_SELECT_ROOM = 3;
-const char CS_CREATE_ROOM = 4;
 const char CS_CHAT = 5;
 
 const char SC_LOGIN_OK = 1;
@@ -40,12 +39,6 @@ struct CS_LEAVE_PLAYER_PACKET {
 };
 
 struct CS_SELECT_ROOM_PACKET {
-	char size;
-	char type;
-	int room_id;
-};
-
-struct CS_CREATE_ROOM_PACKET {
 	char size;
 	char type;
 	int room_id;
