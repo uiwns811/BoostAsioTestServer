@@ -1,18 +1,6 @@
 #include "RoomManager.h"
 #include "Room.h"
 
-int RoomManager::CreateRoom(const shared_ptr<Room>& room)
-{
-	if (roomList.size() >= MAX_ROOM_SIZE) {
-		cout << "더이상 Room을 생성할 수 없음" << endl;
-	}
-	m_lock.lock();
-	roomList.emplace_back(room->shared_from_this());
-	m_lock.unlock();
-	int roomId = find(roomList.begin(), roomList.end(), room) - roomList.begin();
-	return roomId;
-}
-
 void RoomManager::CreateRoom()
 {
 	if (rooms.size() >= MAX_ROOM_SIZE) {
@@ -60,10 +48,6 @@ vector<RoomInfo> RoomManager::GetRoomInfo()
 {
 	vector<RoomInfo> roomInfo;
 	m_lock.lock();
-	//for (int i = 0; i < roomList.size(); i++) {
-	//	roomInfo[i].room_id = i;
-	//	roomInfo[i].cur_user_cnt = roomList[i]->clients.size();
-	//}
 	for (auto& room : rooms) {
 		RoomInfo info;
 		info.room_id = room.first;
@@ -76,9 +60,7 @@ vector<RoomInfo> RoomManager::GetRoomInfo()
 
 shared_ptr<Room> RoomManager::GetRoom(int id)
 {
-	if (false == binary_search(rooms.begin(), rooms.end(), id, Compare())) {
-		CreateRoom(id);
-	}
+	CreateRoom(id);
 	m_lock.lock();
 	auto room = find_if(rooms.begin(), rooms.end(),
 		[id](const pair<int, shared_ptr<Room>>& pair) {return pair.first == id; });

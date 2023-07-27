@@ -10,12 +10,10 @@
 #include <unordered_map>
 #include <algorithm>
 #include <mutex>
+#include <cstring>
 
 using namespace std;
 using boost::asio::ip::tcp;
-
-template <typename T>
-bool compare(const pair<int, shared_ptr<T>>& a, const pair<int, shared_ptr<T>>& b);
 
 struct Compare
 {

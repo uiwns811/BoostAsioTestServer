@@ -9,7 +9,7 @@ void worker_thread(boost::asio::io_context* io_context)
 
 int main()
 {
-	_wsetlocale(LC_ALL, L"korean");
+	//_wsetlocale(LC_ALL, L"korean");
 	boost::asio::io_context io_context;
 
 	try {

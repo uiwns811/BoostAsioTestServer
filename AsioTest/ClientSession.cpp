@@ -5,7 +5,7 @@
 
 void ClientSession::ProcessConnect()
 {
-	cout << "New Client Connected" << endl;
+	wcout << "New Client Connected" << endl;
 	RegisterRecv();
 }
 
@@ -73,7 +73,7 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 	case CS_LOGIN:
 	{
 		CS_LOGIN_PACKET* pkt = reinterpret_cast<CS_LOGIN_PACKET*>(packet);
-		cout << pkt->name << "가 로그인 " << endl;
+		wcout << pkt->name << "가 로그인 " << endl;
 		m_name = pkt->name;
 
 		SC_LOGIN_OK_PACKET loginPacket;
@@ -84,7 +84,7 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 		enterPacket.size = sizeof(SC_ENTER_LOBBY_PACKET);
 		enterPacket.type = SC_ENTER_LOBBY;
 		enterPacket.id = id;
-		strcpy_s(enterPacket.name, m_name.c_str());
+		wcscpy_s(enterPacket.name, m_name.c_str());
 
 		// 들어온 애한테 로그인ㅇㅋ
 		//SendPacket(&loginPacket, m_id);
@@ -107,7 +107,7 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 	{
 		CS_SELECT_ROOM_PACKET* p = reinterpret_cast<CS_SELECT_ROOM_PACKET*>(packet);
 		int roomid = p->room_id;
-		cout << m_name<< "이 "<< roomid << "번 방을 선택함" << endl;
+		wcout << m_name<< "이 "<< roomid << "번 방을 선택함" << endl;
 		if (roomid < 0 || roomid > MAX_ROOM_SIZE) {
 			cout << "유효하지 않은 방 - 다시 선택하십숑" << endl;
 			// Room Info
@@ -124,7 +124,8 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 		else {
 			RoomManager::GetInstance()->GetRoom(roomid)->EnterPlayer(shared_from_this());
 			shared_ptr<Room> room = m_room.lock();
-			room->SendEnterRoomPacket(id);
+			if(room.use_count() != 0)
+				room->SendEnterRoomPacket(id);
 		}
 	}
 	break;
@@ -132,7 +133,8 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 	{
 		CS_CHAT_PACKET* p = reinterpret_cast<CS_CHAT_PACKET*>(packet);
 		shared_ptr<Room> room = m_room.lock();
-		room->SendChatPacket(id, p->chat);
+		if(room.use_count() != 0)
+			room->SendChatPacket(id, m_name.c_str(), p->chat);
 	}
 	break;
 	}
@@ -148,17 +150,18 @@ void ClientSession::RegisterSend(void* packet, std::size_t length)
 			if (!ec)
 			{
 				if (length != bytes_transferred) {
-					cout << "Incomplete Send occured on session[" << m_id << "]" << endl;
+					wcout << "Incomplete Send occured on session[" << m_id << "]" << endl;
 				}
+				cout << "Send Complete" << endl;
 			}
 		});
 }
 
 void ClientSession::SendPacket(void* packet, unsigned id)
 {
-	//int packet_size = reinterpret_cast<unsigned char*>(packet)[0];
-	//unsigned char* buff = new unsigned char[packet_size];
-	//memcpy(buff, packet, packet_size);
-	//SessionManager::GetInstance()->FindClient(id)->RegisterSend(buff, packet_size);
+	int packet_size = reinterpret_cast<unsigned char*>(packet)[0];
+	unsigned char* buff = new unsigned char[packet_size];
+	memcpy(buff, packet, packet_size);
+	SessionManager::GetInstance()->FindClient(id)->RegisterSend(buff, packet_size);
 	//SessionManager::GetInstance()->FindClient(id)->RegisterSend(packet, packet_size);
 }

@@ -14,7 +14,7 @@ private:
 
 public:
 	int m_id;
-	string m_name;
+	wstring m_name;
 	weak_ptr<Room> m_room;
 
 private:

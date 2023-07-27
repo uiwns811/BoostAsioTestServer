@@ -11,7 +11,7 @@ const int MAX_ROOM_SIZE = 10;
 const char CS_LOGIN = 1;
 const char CS_LEAVE_PLAYER = 2;
 const char CS_SELECT_ROOM = 3;
-const char CS_CHAT = 5;
+const char CS_CHAT = 4;
 
 const char SC_LOGIN_OK = 1;
 const char SC_ENTER_LOBBY = 2;
@@ -30,7 +30,7 @@ struct RoomInfo {
 struct CS_LOGIN_PACKET {
 	char size;
 	char type;
-	char name[NAME_SIZE];
+	wchar_t name[NAME_SIZE];
 };
 
 struct CS_LEAVE_PLAYER_PACKET {
@@ -47,7 +47,7 @@ struct CS_SELECT_ROOM_PACKET {
 struct CS_CHAT_PACKET {
 	char size;
 	char type;
-	char chat[CHAT_SIZE];
+	wchar_t chat[CHAT_SIZE];
 };
 
 //////////////////////////////////////////////
@@ -62,14 +62,14 @@ struct SC_ENTER_LOBBY_PACKET {
 	char size;
 	char type;
 	int id;
-	char name[NAME_SIZE];
+	wchar_t name[NAME_SIZE];
 };
 
 struct SC_LEAVE_PLAYER_PACKET {
 	char size;
 	char type;
 	int id;
-	char name[NAME_SIZE];
+	wchar_t name[NAME_SIZE];
 };
 
 struct SC_ROOM_INFO_PACKET {
@@ -88,7 +88,7 @@ struct SC_ENTER_ROOM_PACKET {
 struct SC_CHAT_PACKET {
 	char size;
 	char type;
+	wchar_t chat[CHAT_SIZE];
+	wchar_t name[NAME_SIZE];
 	int id;
-	char chat[CHAT_SIZE];
-	char name[NAME_SIZE];
 };

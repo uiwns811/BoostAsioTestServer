@@ -4,7 +4,7 @@
 
 void Room::EnterPlayer(const shared_ptr<ClientSession>& session)
 {
-	cout << session->m_name << "이 방[" << m_id << "]에 입장하심" << endl;
+	wcout << session->m_name << "이 방[" << m_id << "]에 입장하심" << endl;
 	m_lock.lock();
 	clients.emplace_back(make_pair(session->m_id, session));
 	session->m_room = shared_from_this();
@@ -26,7 +26,7 @@ void Room::LeavePlayer(const shared_ptr<ClientSession>& session)
 	p.size = sizeof(SC_LEAVE_PLAYER_PACKET);
 	p.type = SC_LEAVE_PLAYER;
 	p.id = id;
-	strcpy_s(p.name, session->m_name.c_str());
+	wcscpy_s(p.name, session->m_name.c_str());
 
 	for (auto& client : clients) {
 		if (client.first == id) continue;
@@ -82,19 +82,21 @@ void Room::SendEnterRoomPacket(int id)
 	}
 }
 
-void Room::SendChatPacket(int sender, char* chat)
+void Room::SendChatPacket(int sender, const wchar_t* name, const wchar_t* chat)
 {
 	// auto sendClient = find(clients.begin(), clients.end(), sender);
-	auto sendClient = find_if(clients.begin(), clients.end(),
-		[sender](const pair<int, shared_ptr<ClientSession>>& client) {return client.first == sender; });
-	SC_CHAT_PACKET p;
-	p.size = sizeof(SC_CHAT_PACKET);
-	p.type = SC_CHAT;
-	p.id = sender;
-	strcpy_s(p.name, sendClient->second->m_name.c_str());
-	strcpy_s(p.chat, chat);
+	//auto sendClient = find_if(clients.begin(), clients.end(),
+	//	[sender](const pair<int, shared_ptr<ClientSession>>& client) {return client.first == sender; });
+	SC_CHAT_PACKET chatPacket;
+	chatPacket.size = sizeof(SC_CHAT_PACKET);
+	chatPacket.type = SC_CHAT;
+	chatPacket.id = sender;
+	wcscpy_s(chatPacket.name, name);
+	wcscpy_s(chatPacket.chat, chat);
 
 	for (auto& client : clients) {
-		client.second->RegisterSend(&p, p.size);
+		//client.second->RegisterSend(&chatPacket, chatPacket.size);
+		client.second->SendPacket(&chatPacket, client.first);
+		//wcout << chatPacket.name << " - " << chatPacket.chat << endl;
 	}
 }

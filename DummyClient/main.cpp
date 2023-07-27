@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 #include "../AsioTest/protocol.h"
@@ -20,13 +21,13 @@ private:
 	int cur_packet_size;
 	int prev_data_size;
 
-	string m_name;
+	wstring m_name;
 
 public:
 	Client(boost::asio::io_context& io_context, const tcp::endpoint& endpoints) : socket(io_context), endpoint(endpoints)
 	{
-		cout << "ID 입력 : ";
-		cin >> m_name;
+		wcout << "ID 입력 : ";
+		wcin >> m_name;
 		Connect();
 	}
 
@@ -42,13 +43,13 @@ public:
 				OnConnected();
 			}
 			else
-				cout << "connect failed : " << ec.message() << endl;
+				std::cout << "connect failed : " << ec.message() << endl;
 		});
 	}
 
 	void OnConnected()
 	{
-		cout << "Connected to server" << endl;
+		wcout << "Connected to server" << endl;
 
 		SendLoginPacket(m_name);
 
@@ -127,28 +128,29 @@ public:
 		{
 		case SC_LOGIN_OK:
 		{
-			cout << "로그인 완료!" << endl;
+			wcout << "로그인 완료!" << endl;
 		}
 		break;
 		case SC_ENTER_LOBBY:
 		{
 			SC_ENTER_LOBBY_PACKET* p = reinterpret_cast<SC_ENTER_LOBBY_PACKET*>(packet);
-			cout << "New Client [" << p->name << "] Connected!" << endl;
+			wcout << "New Client [" << p->name << "] Connected!" << endl;
 		}
 		break;
 		case SC_LEAVE_PLAYER:
 		{
 			SC_LEAVE_PLAYER_PACKET* p = reinterpret_cast<SC_LEAVE_PLAYER_PACKET*>(packet);
-			cout << "player [" << p->name << "] 접속 종료" << endl;
+			wcout << "player [" << p->name << "] 접속 종료" << endl;
 		}
 		break;
 		case SC_ROOM_INFO:
 		{
 			SC_ROOM_INFO_PACKET* p = reinterpret_cast<SC_ROOM_INFO_PACKET*>(packet);
 			for (auto& info : p->roomList) {
-				cout << "Room[" << info.room_id << "] - 현재 " << info.cur_user_cnt << "명 접속 중" << endl;
+				if (info.cur_user_cnt == 0) continue;
+				wcout << "Room[" << info.room_id << "] - 현재 " << info.cur_user_cnt << "명 접속 중" << endl;
 			}
-			cout << "방을 생성하려면 0, 입장하려면 생성된 방의 id를 입력하세용";
+			wcout << "입장을 원하는 방 번호를 입력 (방 없으면 생성함) : ";
 			int input;
 			cin >> input;
 			CS_SELECT_ROOM_PACKET pkt;
@@ -161,34 +163,34 @@ public:
 		case SC_ENTER_ROOM:
 		{
 			SC_ENTER_ROOM_PACKET* p = reinterpret_cast<SC_ENTER_ROOM_PACKET*>(packet);
-			cout << "player [" << p->client_id << "]가 Room[" << p->room_id << "]에 입장하였습니다" << endl;
+			wcout << "player [" << p->client_id << "]가 Room[" << p->room_id << "]에 입장하였습니다" << endl;
 			isChatting = true;
 		}
 		break;
 		case SC_CHAT:
 		{
 			SC_CHAT_PACKET* p = reinterpret_cast<SC_CHAT_PACKET*>(packet);
-			cout << "[" << p->name << "] : " << p->chat << endl;
+			wcout << "[" << p->name << "] : " << p->chat << endl;
 		}
 		break;
 		}
 	}
 
-	void SendLoginPacket(string name)
+	void SendLoginPacket(wstring name)
 	{
 		CS_LOGIN_PACKET p;
 		p.size = sizeof(CS_LOGIN_PACKET);
 		p.type = CS_LOGIN;
-		strcpy_s(p.name, name.c_str());
+		wcscpy_s(p.name, name.c_str());
 		Write(&p, p.size);
 	}
 
-	void SendChatPacket(string chat)
+	void SendChatPacket(wstring chat)
 	{
 		CS_CHAT_PACKET p;
 		p.size = sizeof(CS_CHAT_PACKET);
 		p.type = CS_CHAT;
-		strcpy_s(p.chat, chat.c_str());
+		wcscpy_s(p.chat, chat.c_str());
 		Write(&p, p.size);
 	}
 };
@@ -214,16 +216,17 @@ int main()
 
 	while (true) {
 		if (isChatting) {
-			string msg;
-			getline(cin, msg);
-			if (msg != "\0")
+			wstring msg;
+			getline(wcin, msg);
+			if (0 != wcscmp(msg.c_str(), L"\0")) {
 				client.SendChatPacket(msg);
+			}
 		}
 	}
 
 	th->join();
 	delete th;
 
-	cout << "종료" << endl;
+	wcout << "종료" << endl;
 	return 0;
 }
