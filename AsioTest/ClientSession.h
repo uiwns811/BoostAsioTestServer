@@ -29,7 +29,7 @@ public:
 	}
 	virtual ~ClientSession() {};
 
-	void SendPacket(void* packet, unsigned id);
+	void SendPacket(void* packet);
 
 	void RegisterSend(void* packet, std::size_t length);
 	void RegisterRecv();

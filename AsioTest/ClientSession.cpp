@@ -6,6 +6,7 @@
 void ClientSession::ProcessConnect()
 {
 	wcout << "New Client Connected" << endl;
+	SessionManager::GetInstance()->AddClient(shared_from_this());
 	RegisterRecv();
 }
 
@@ -87,8 +88,7 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 		wcscpy_s(enterPacket.name, m_name.c_str());
 
 		// 들어온 애한테 로그인ㅇㅋ
-		//SendPacket(&loginPacket, m_id);
-		RegisterSend(&loginPacket, loginPacket.size);
+		SendPacket(&loginPacket);
 
 		// Room Info
 		SC_ROOM_INFO_PACKET roomPacket;
@@ -99,8 +99,7 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 		for (int i = 0; i < curRoomInfo.size(); i++) {
 			roomPacket.roomList[i] = curRoomInfo[i];
 		}
-		RegisterSend(&roomPacket, roomPacket.size);
-		// 포인터로  안해도 되나?
+		SendPacket(&roomPacket);
 	}
 	break;   
 	case CS_SELECT_ROOM :
@@ -108,7 +107,7 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 		CS_SELECT_ROOM_PACKET* p = reinterpret_cast<CS_SELECT_ROOM_PACKET*>(packet);
 		int roomid = p->room_id;
 		wcout << m_name<< "이 "<< roomid << "번 방을 선택함" << endl;
-		if (roomid < 0 || roomid > MAX_ROOM_SIZE) {
+		if (roomid < 1 || roomid > MAX_ROOM_SIZE) {
 			cout << "유효하지 않은 방 - 다시 선택하십숑" << endl;
 			// Room Info
 			SC_ROOM_INFO_PACKET roomPacket;
@@ -119,7 +118,7 @@ void ClientSession::ProcessPacket(unsigned char* packet, int id)
 			for (int i = 0; i < curRoomInfo.size(); i++) {
 				roomPacket.roomList[i] = curRoomInfo[i];
 			}
-			RegisterSend(&roomPacket, roomPacket.size);
+			SendPacket(&roomPacket);
 		}
 		else {
 			RoomManager::GetInstance()->GetRoom(roomid)->EnterPlayer(shared_from_this());
@@ -151,17 +150,16 @@ void ClientSession::RegisterSend(void* packet, std::size_t length)
 			{
 				if (length != bytes_transferred) {
 					wcout << "Incomplete Send occured on session[" << m_id << "]" << endl;
-				}
-				cout << "Send Complete" << endl;
+				}					
+				delete packet;
 			}
 		});
 }
 
-void ClientSession::SendPacket(void* packet, unsigned id)
+void ClientSession::SendPacket(void* packet)
 {
 	int packet_size = reinterpret_cast<unsigned char*>(packet)[0];
 	unsigned char* buff = new unsigned char[packet_size];
 	memcpy(buff, packet, packet_size);
-	SessionManager::GetInstance()->FindClient(id)->RegisterSend(buff, packet_size);
-	//SessionManager::GetInstance()->FindClient(id)->RegisterSend(packet, packet_size);
+	RegisterSend(buff, packet_size);
 }

@@ -5,8 +5,6 @@
 
 void GameServer::Init()
 {
-	//m_sessionManager = make_unique<SessionManager>();
-	//m_roomManager = make_unique<RoomManager>();
 }
 
 void GameServer::Shutdown()
@@ -40,11 +38,11 @@ void GameServer::RegisterAccept()
 void GameServer::ProcessAccept(const boost::system::error_code& ec)
 {
 	if (!ec) {
-		//make_shared<ClientSession>(move(m_socket))->ProcessConnect();
-		shared_ptr<ClientSession> newSession = make_shared<ClientSession>(move(m_socket));
+		make_shared<ClientSession>(move(m_socket))->ProcessConnect();
+		//shared_ptr<ClientSession> newSession = make_shared<ClientSession>(move(m_socket));
 		//m_sessionManager->AddClient(newSession);
-		SessionManager::GetInstance()->AddClient(newSession);
-		newSession->RegisterRecv();
+		// SessionManager::GetInstance()->AddClient(newSession);
+		//newSession->RegisterRecv();
 	}
 	RegisterAccept();
 }

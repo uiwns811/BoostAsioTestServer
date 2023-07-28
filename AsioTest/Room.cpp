@@ -30,7 +30,7 @@ void Room::LeavePlayer(const shared_ptr<ClientSession>& session)
 
 	for (auto& client : clients) {
 		if (client.first == id) continue;
-		client.second->RegisterSend(&p, p.size);
+		client.second->SendPacket(&p);
 	}
 
 	//clients.erase(clients.begin() + id);
@@ -45,14 +45,6 @@ void Room::LeavePlayer(const shared_ptr<ClientSession>& session)
 	return;
 }
 
-void Room::BroadcastPacket(void* packet, size_t length, int sender)
-{
-	for (auto& c : clients) {
-		if (c.first == sender) continue;
-		c.second->RegisterSend(&packet, length);
-	}
-}
-
 void Room::SendEnterRoomPacket(int id)
 {
 	SC_ENTER_ROOM_PACKET roomPacket;
@@ -61,30 +53,28 @@ void Room::SendEnterRoomPacket(int id)
 	roomPacket.room_id = m_id;
 	roomPacket.client_id = id;
 	// 본인 입장 알림
-	//auto newClient = find(clients.begin(), clients.end(), id);
+
 	auto newClient = find_if(clients.begin(), clients.end(),
 		[id](const pair<int, shared_ptr<ClientSession>>& client) {return client.first == id; });
 
-	newClient->second->RegisterSend(&roomPacket, roomPacket.size);
-	//clients[id]->RegisterSend(&roomPacket, roomPacket.size);
-
+	newClient->second->SendPacket(&roomPacket);
+	
 	// 이미 있는 애들한테 얘들어왓다고
 	for (auto& client : clients) {
 		if (client.first == id) continue;
-		client.second->RegisterSend(&roomPacket, roomPacket.size);
+		client.second->SendPacket(&roomPacket);
 	}
 
 	// 새로 들어온 애한테 기존애들정보
 	for (auto& client : clients) {
 		if (client.first == id) continue;
 		roomPacket.client_id = client.first;
-		newClient->second->RegisterSend(&roomPacket, roomPacket.size);
+		newClient->second->SendPacket(&roomPacket);
 	}
 }
 
 void Room::SendChatPacket(int sender, const wchar_t* name, const wchar_t* chat)
 {
-	// auto sendClient = find(clients.begin(), clients.end(), sender);
 	//auto sendClient = find_if(clients.begin(), clients.end(),
 	//	[sender](const pair<int, shared_ptr<ClientSession>>& client) {return client.first == sender; });
 	SC_CHAT_PACKET chatPacket;
@@ -95,8 +85,6 @@ void Room::SendChatPacket(int sender, const wchar_t* name, const wchar_t* chat)
 	wcscpy_s(chatPacket.chat, chat);
 
 	for (auto& client : clients) {
-		//client.second->RegisterSend(&chatPacket, chatPacket.size);
-		client.second->SendPacket(&chatPacket, client.first);
-		//wcout << chatPacket.name << " - " << chatPacket.chat << endl;
+		client.second->SendPacket(&chatPacket);
 	}
 }

@@ -16,8 +16,6 @@ public:
 	void EnterPlayer(const shared_ptr<ClientSession>& session);
 	void LeavePlayer(const shared_ptr<ClientSession>& session);
 
-	void BroadcastPacket(void* packet, size_t length, int sender);
-
 	void SendEnterRoomPacket(int id);
 	void SendChatPacket(int sender, const wchar_t* name, const wchar_t* chat);
 };
