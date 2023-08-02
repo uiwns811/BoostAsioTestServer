@@ -37,8 +37,10 @@ void Client::RegisterSend(void* packet, std::size_t length)
 
 void Client::RegisterRecv()
 {
-	m_socket.async_read_some(boost::asio::buffer(data, BUF_SIZE),
-		boost::bind(&Client::ProcessRecv, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+	m_socket.async_read_some(boost::asio::buffer(recvbuff, BUF_SIZE),
+		[this](boost::system::error_code ec, std::size_t length) {
+			ProcessRecv(ec, length);
+		});
 }
 
 void Client::ProcessRecv(const boost::system::error_code& ec, std::size_t length)
@@ -71,37 +73,35 @@ void Client::ProcessRecv(const boost::system::error_code& ec, std::size_t length
 	//		ProcessRecv();
 	//	});
 
-	ConstructData(data, length);
+	ConstructData(recvbuff, length);
 	RegisterRecv();
 }
 
 void Client::ConstructData(unsigned char* buf, size_t io_byte)
 {
-	int data_to_process = static_cast<int>(io_byte);
-	while (0 < data_to_process) {
-		if (0 == cur_packet_size) {
-			cur_packet_size = buf[0];
-		}
-		int need_to_build = cur_packet_size - prev_data_size;
-		if (need_to_build <= data_to_process) {
-			memcpy(packet + prev_data_size, buf, need_to_build);
-			ProcessPacket(packet);
-			cur_packet_size = 0;
-			prev_data_size = 0;
-			data_to_process -= need_to_build;
-			buf += need_to_build;
-		}
-		else {
-			memcpy(packet + prev_data_size, buf, data_to_process);
-			prev_data_size += data_to_process;
-			data_to_process = 0;
-			buf += data_to_process;
-		}
+	int data_to_process = static_cast<int>(io_byte) + prev_data_size;
+	while (data_to_process > 0) {
+		int packet_size = buf[0];
+		if (packet_size > data_to_process) break;
+
+		//PacketHeader* header = reinterpret_cast<PacketHeader*>(buf);
+		//if (header->size > data_to_process) break;
+		
+		//memcpy(remainData, buf, packet_size);
+		ProcessPacket(buf);
+		buf += packet_size;
+		data_to_process -= packet_size;
+	}
+	prev_data_size = data_to_process;
+	if (prev_data_size > 0) {
+		memcpy(remainData, buf, prev_data_size);
 	}
 }
 
 void Client::ProcessPacket(unsigned char* packet)
 {
+	//PacketHeader* header = reinterpret_cast<PacketHeader*>(packet);
+	//packet += header->size;
 	switch (packet[1])
 	{
 	case SC_LOGIN_OK:

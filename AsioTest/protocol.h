@@ -20,6 +20,13 @@ const char SC_ROOM_INFO = 4;
 const char SC_ENTER_ROOM = 5;
 const char SC_CHAT = 6;
 
+#pragma pack(push, 1)
+
+struct PacketHeader {
+	char size;
+	char type;
+};
+
 struct RoomInfo {
 	int room_id;
 	int cur_user_cnt;
@@ -92,3 +99,5 @@ struct SC_CHAT_PACKET {
 	wchar_t name[NAME_SIZE];
 	int id;
 };
+
+#pragma pack (pop)

@@ -5,6 +5,7 @@
 
 void GameServer::Init()
 {
+
 }
 
 void GameServer::Shutdown()
@@ -17,12 +18,11 @@ void GameServer::Run(boost::asio::io_context* io_context)
 	RegisterAccept();
 
 	std::size_t numThreads = std::thread::hardware_concurrency();
-	for (int i = 0; i < numThreads; i++) {
+	for (int i = 0; i < numThreads - 1; i++) {
 		//worker_threads.emplace_back(new boost::thread(worker_thread, &io_context));
-		//worker_threads.emplace_back(new boost::thread([this, &io_context]() {io_context->run(); }));
-		worker_threads.emplace_back(new boost::thread(boost::bind(&boost::asio::io_context::run, io_context)));
+		worker_threads.emplace_back(new boost::thread([this, &io_context]() {io_context->run(); }));
+		//worker_threads.emplace_back(new boost::thread(boost::bind(&boost::asio::io_context::run, io_context)));
 	}
-
 
 	for (auto& wth : worker_threads) {
 		wth->join();

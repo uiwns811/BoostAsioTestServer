@@ -40,7 +40,7 @@ void RoomManager::RemoveRoom(int id)
 	//roomList.erase(roomList.begin() + id);
 	rooms.erase(remove_if(rooms.begin(), rooms.end(), 
 		[id](const pair<int, shared_ptr<Room>>& room) {return room.first == id; }));
-	cout << "Room[" << id << "]가 삭제되었습니다";
+	cout << "Room[" << id << "]가 삭제되었습니다" << endl;
 	m_lock.unlock();
 }
 

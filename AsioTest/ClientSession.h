@@ -6,9 +6,8 @@ class ClientSession : public enable_shared_from_this<ClientSession>
 {
 private:
 	tcp::socket m_socket;
-	unsigned char data[BUF_SIZE];
-	unsigned char packet[BUF_SIZE];
-	int cur_packet_size;
+	unsigned char recvbuff[BUF_SIZE];
+	unsigned char remainData[BUF_SIZE];
 	int prev_data_size;
 	mutex m_lock;
 
@@ -24,10 +23,9 @@ private:
 public:
 	ClientSession(tcp::socket socket) : m_socket(std::move(socket))
 	{
-		cur_packet_size = 0;
 		prev_data_size = 0;
 	}
-	virtual ~ClientSession() {};
+	virtual ~ClientSession() { cout << "ClientSession ¼Ò¸ê" << endl; };
 
 	void SendPacket(void* packet);
 

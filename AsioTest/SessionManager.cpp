@@ -26,7 +26,7 @@ shared_ptr<ClientSession> SessionManager::FindClient(int id)
 
 void SessionManager::RemoveClient(int id)
 {
-	cout << "Client [" << id << "] is Disconnceted!" << endl;
+	cout << "Client [" << id << "] 접속 종료! " << endl;
 	m_lock.lock();
 	clients.erase(id);
 	m_lock.unlock();

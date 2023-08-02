@@ -7,9 +7,9 @@ private:
 	tcp::socket m_socket;
 	boost::asio::io_context io_context;
 	tcp::endpoint endpoint;
-	unsigned char data[BUF_SIZE];
-	unsigned char packet[BUF_SIZE];
-	int cur_packet_size;
+
+	unsigned char recvbuff[BUF_SIZE];
+	unsigned char remainData[BUF_SIZE];
 	int prev_data_size;
 
 	wstring m_name;

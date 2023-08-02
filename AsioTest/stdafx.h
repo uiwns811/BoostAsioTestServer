@@ -11,8 +11,10 @@
 #include <algorithm>
 #include <mutex>
 #include <cstring>
+#include <concurrent_queue.h>
 
 using namespace std;
+using namespace Concurrency;
 using boost::asio::ip::tcp;
 
 struct Compare
