@@ -24,7 +24,7 @@ void Room::LeavePlayer(const shared_ptr<ClientSession>& session)
 
 	SC_LEAVE_PLAYER_PACKET p;
 	p.size = sizeof(SC_LEAVE_PLAYER_PACKET);
-	p.type = SC_LEAVE_PLAYER;
+	p.type = PacketType::SC_LEAVE_PLAYER;
 	p.id = id;
 	wcscpy_s(p.name, session->m_name.c_str());
 
@@ -49,7 +49,7 @@ void Room::SendEnterRoomPacket(int id)
 {
 	SC_ENTER_ROOM_PACKET roomPacket;
 	roomPacket.size = sizeof(SC_ENTER_ROOM_PACKET);
-	roomPacket.type = SC_ENTER_ROOM;
+	roomPacket.type = PacketType::SC_ENTER_ROOM;
 	roomPacket.room_id = m_id;
 	roomPacket.client_id = id;
 	// 본인 입장 알림
@@ -79,7 +79,7 @@ void Room::SendChatPacket(int sender, const wchar_t* name, const wchar_t* chat)
 	//	[sender](const pair<int, shared_ptr<ClientSession>>& client) {return client.first == sender; });
 	SC_CHAT_PACKET chatPacket;
 	chatPacket.size = sizeof(SC_CHAT_PACKET);
-	chatPacket.type = SC_CHAT;
+	chatPacket.type = PacketType::SC_CHAT;
 	chatPacket.id = sender;
 	wcscpy_s(chatPacket.name, name);
 	wcscpy_s(chatPacket.chat, chat);

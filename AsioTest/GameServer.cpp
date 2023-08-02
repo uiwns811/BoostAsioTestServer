@@ -2,10 +2,11 @@
 #include "ClientSession.h"
 #include "SessionManager.h"
 #include "RoomManager.h"
+#include "PacketManager.h"
 
 void GameServer::Init()
 {
-
+	PacketManager::GetInstance()->Init();
 }
 
 void GameServer::Shutdown()

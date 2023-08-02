@@ -102,26 +102,27 @@ void Client::ProcessPacket(unsigned char* packet)
 {
 	//PacketHeader* header = reinterpret_cast<PacketHeader*>(packet);
 	//packet += header->size;
-	switch (packet[1])
+	PacketType type = (PacketType)packet[1];
+	switch (type)
 	{
-	case SC_LOGIN_OK:
+	case PacketType::SC_LOGIN_OK:
 	{
 		wcout << "로그인 완료!" << endl;
 	}
 	break;
-	case SC_ENTER_LOBBY:
+	case PacketType::SC_ENTER_LOBBY:
 	{
 		SC_ENTER_LOBBY_PACKET* p = reinterpret_cast<SC_ENTER_LOBBY_PACKET*>(packet);
 		wcout << "New Client [" << p->name << "] Connected!" << endl;
 	}
 	break;
-	case SC_LEAVE_PLAYER:
+	case PacketType::SC_LEAVE_PLAYER:
 	{
 		SC_LEAVE_PLAYER_PACKET* p = reinterpret_cast<SC_LEAVE_PLAYER_PACKET*>(packet);
 		wcout << "player [" << p->name << "] 접속 종료" << endl;
 	}
 	break;
-	case SC_ROOM_INFO:
+	case PacketType::SC_ROOM_INFO:
 	{
 		SC_ROOM_INFO_PACKET* p = reinterpret_cast<SC_ROOM_INFO_PACKET*>(packet);
 		for (auto& info : p->roomList) {
@@ -138,19 +139,19 @@ void Client::ProcessPacket(unsigned char* packet)
 
 		CS_SELECT_ROOM_PACKET pkt;
 		pkt.size = sizeof(CS_SELECT_ROOM_PACKET);
-		pkt.type = CS_SELECT_ROOM;
+		pkt.type = PacketType::CS_SELECT_ROOM;
 		pkt.room_id = input;
 		RegisterSend(&pkt, pkt.size);
 	}
 	break;
-	case SC_ENTER_ROOM:
+	case PacketType::SC_ENTER_ROOM:
 	{
 		SC_ENTER_ROOM_PACKET* p = reinterpret_cast<SC_ENTER_ROOM_PACKET*>(packet);
 		wcout << "player [" << p->client_id << "]가 Room[" << p->room_id << "]에 입장하였습니다" << endl;
 		isChatting = true;
 	}
 	break;
-	case SC_CHAT:
+	case PacketType::SC_CHAT:
 	{
 		SC_CHAT_PACKET* p = reinterpret_cast<SC_CHAT_PACKET*>(packet);
 		wcout << "[" << p->name << "] : " << p->chat << endl;
@@ -163,7 +164,7 @@ void Client::SendLoginPacket(wstring name)
 {
 	CS_LOGIN_PACKET p;
 	p.size = sizeof(CS_LOGIN_PACKET);
-	p.type = CS_LOGIN;
+	p.type = PacketType::CS_LOGIN;
 	wcscpy_s(p.name, name.c_str());
 	RegisterSend(&p, p.size);
 }
@@ -172,7 +173,7 @@ void Client::SendChatPacket(wstring chat)
 {
 	CS_CHAT_PACKET p;
 	p.size = sizeof(CS_CHAT_PACKET);
-	p.type = CS_CHAT;
+	p.type = PacketType::CS_CHAT;
 	wcscpy_s(p.chat, chat.c_str());
 	RegisterSend(&p, p.size);
 }

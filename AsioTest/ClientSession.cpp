@@ -42,8 +42,8 @@ void ClientSession::ProcessRecv(const boost::system::error_code& ec, std::size_t
 		ProcessDisconnect();
 		return;
 	}
-	//PacketManager::GetInstance()->Enqueue(recvbuff);
-	ConstructData(recvbuff, length);
+	PacketManager::GetInstance()->Enqueue(shared_from_this(), recvbuff, length);
+	//ConstructData(recvbuff, length);
 	RegisterRecv();
 }
 
@@ -61,6 +61,7 @@ void ClientSession::ConstructData(unsigned char* buf, size_t io_byte)
 		//ProcessPacket(buf, m_id);
 		//buf += header->size;
 		//data_to_process -= header->size;
+
 		int packet_size = buf[0];
 		if (packet_size > data_to_process) break;
 
@@ -79,73 +80,73 @@ void ClientSession::ConstructData(unsigned char* buf, size_t io_byte)
 
 void ClientSession::ProcessPacket(unsigned char* packet, int id)
 {
-	switch (packet[1]) {
-	case CS_LOGIN:
-	{
-		CS_LOGIN_PACKET* pkt = reinterpret_cast<CS_LOGIN_PACKET*>(packet);
-		m_name = pkt->name;
-		wcout << m_name << "가 로그인 " << endl;
+	//switch (packet[1]) {
+	//case CS_LOGIN:
+	//{
+	//	CS_LOGIN_PACKET* pkt = reinterpret_cast<CS_LOGIN_PACKET*>(packet);
+	//	m_name = pkt->name;
+	//	wcout << m_name << "가 로그인 " << endl;
 
-		SC_LOGIN_OK_PACKET loginPacket;
-		loginPacket.size = sizeof(SC_LOGIN_OK_PACKET);
-		loginPacket.type = SC_LOGIN_OK;
+	//	SC_LOGIN_OK_PACKET loginPacket;
+	//	loginPacket.size = sizeof(SC_LOGIN_OK_PACKET);
+	//	loginPacket.type = SC_LOGIN_OK;
 
-		SC_ENTER_LOBBY_PACKET enterPacket;
-		enterPacket.size = sizeof(SC_ENTER_LOBBY_PACKET);
-		enterPacket.type = SC_ENTER_LOBBY;
-		enterPacket.id = id;
-		wcscpy_s(enterPacket.name, m_name.c_str());
+	//	SC_ENTER_LOBBY_PACKET enterPacket;
+	//	enterPacket.size = sizeof(SC_ENTER_LOBBY_PACKET);
+	//	enterPacket.type = SC_ENTER_LOBBY;
+	//	enterPacket.id = id;
+	//	wcscpy_s(enterPacket.name, m_name.c_str());
 
-		// 들어온 애한테 로그인ㅇㅋ
-		SendPacket(&loginPacket);
+	//	// 들어온 애한테 로그인ㅇㅋ
+	//	SendPacket(&loginPacket);
 
-		// Room Info
-		SC_ROOM_INFO_PACKET roomPacket;
-		memset(&roomPacket, NULL, sizeof(SC_ROOM_INFO_PACKET));
-		roomPacket.size = sizeof(SC_ROOM_INFO_PACKET);
-		roomPacket.type = SC_ROOM_INFO;
-		vector<RoomInfo> curRoomInfo = RoomManager::GetInstance()->GetRoomInfo();
-		for (int i = 0; i < curRoomInfo.size(); i++) {
-			roomPacket.roomList[i] = curRoomInfo[i];
-		}
-		SendPacket(&roomPacket);
-	}
-	break;   
-	case CS_SELECT_ROOM :
-	{
-		CS_SELECT_ROOM_PACKET* p = reinterpret_cast<CS_SELECT_ROOM_PACKET*>(packet);
-		int roomid = p->room_id;
-		wcout << m_name<< "이 "<< roomid << "번 방을 선택함" << endl;
-		if (roomid < 1 || roomid > MAX_ROOM_SIZE) {
-			cout << "유효하지 않은 방 - 다시 선택하십숑" << endl;
-			// Room Info
-			SC_ROOM_INFO_PACKET roomPacket;
-			memset(&roomPacket, NULL, sizeof(SC_ROOM_INFO_PACKET));
-			roomPacket.size = sizeof(SC_ROOM_INFO_PACKET);
-			roomPacket.type = SC_ROOM_INFO;
-			vector<RoomInfo> curRoomInfo = RoomManager::GetInstance()->GetRoomInfo();
-			for (int i = 0; i < curRoomInfo.size(); i++) {
-				roomPacket.roomList[i] = curRoomInfo[i];
-			}
-			SendPacket(&roomPacket);
-		}
-		else {
-			RoomManager::GetInstance()->GetRoom(roomid)->EnterPlayer(shared_from_this());
-			shared_ptr<Room> room = m_room.lock();
-			if(room.use_count() != 0)
-				room->SendEnterRoomPacket(id);
-		}
-	}
-	break;
-	case CS_CHAT:
-	{
-		CS_CHAT_PACKET* p = reinterpret_cast<CS_CHAT_PACKET*>(packet);
-		shared_ptr<Room> room = m_room.lock();
-		if(room.use_count() != 0)
-			room->SendChatPacket(id, m_name.c_str(), p->chat);
-	}
-	break;
-	}
+	//	// Room Info
+	//	SC_ROOM_INFO_PACKET roomPacket;
+	//	memset(&roomPacket, NULL, sizeof(SC_ROOM_INFO_PACKET));
+	//	roomPacket.size = sizeof(SC_ROOM_INFO_PACKET);
+	//	roomPacket.type = SC_ROOM_INFO;
+	//	vector<RoomInfo> curRoomInfo = RoomManager::GetInstance()->GetRoomInfo();
+	//	for (int i = 0; i < curRoomInfo.size(); i++) {
+	//		roomPacket.roomList[i] = curRoomInfo[i];
+	//	}
+	//	SendPacket(&roomPacket);
+	//}
+	//break;   
+	//case CS_SELECT_ROOM :
+	//{
+	//	CS_SELECT_ROOM_PACKET* p = reinterpret_cast<CS_SELECT_ROOM_PACKET*>(packet);
+	//	int roomid = p->room_id;
+	//	wcout << m_name<< "이 "<< roomid << "번 방을 선택함" << endl;
+	//	if (roomid < 1 || roomid > MAX_ROOM_SIZE) {
+	//		cout << "유효하지 않은 방 - 다시 선택하십숑" << endl;
+	//		// Room Info
+	//		SC_ROOM_INFO_PACKET roomPacket;
+	//		memset(&roomPacket, NULL, sizeof(SC_ROOM_INFO_PACKET));
+	//		roomPacket.size = sizeof(SC_ROOM_INFO_PACKET);
+	//		roomPacket.type = SC_ROOM_INFO;
+	//		vector<RoomInfo> curRoomInfo = RoomManager::GetInstance()->GetRoomInfo();
+	//		for (int i = 0; i < curRoomInfo.size(); i++) {
+	//			roomPacket.roomList[i] = curRoomInfo[i];
+	//		}
+	//		SendPacket(&roomPacket);
+	//	}
+	//	else {
+	//		RoomManager::GetInstance()->GetRoom(roomid)->EnterPlayer(shared_from_this());
+	//		shared_ptr<Room> room = m_room.lock();
+	//		if(room.use_count() != 0)
+	//			room->SendEnterRoomPacket(id);
+	//	}
+	//}
+	//break;
+	//case CS_CHAT:
+	//{
+	//	CS_CHAT_PACKET* p = reinterpret_cast<CS_CHAT_PACKET*>(packet);
+	//	shared_ptr<Room> room = m_room.lock();
+	//	if(room.use_count() != 0)
+	//		room->SendChatPacket(id, m_name.c_str(), p->chat);
+	//}
+	//break;
+	//}
 }
 
 
