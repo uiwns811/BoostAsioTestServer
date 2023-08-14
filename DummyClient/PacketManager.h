@@ -1,13 +1,12 @@
 #pragma once
 #include "stdafx.h"
 
-class ClientSession;
-class PacketManager : public TSingleton<PacketManager>
-{
+class PacketManager
+{/*
 private:
-	concurrent_queue<unsigned char*> m_queue;
+	queue<unsigned char*> m_queue;
 	unordered_map<PacketType, function<void(shared_ptr<ClientSession>, unsigned char*)>> m_handlers;
-	
+
 	unsigned char remainData[BUF_SIZE];
 	int prev_data_size;
 
@@ -27,6 +26,5 @@ public:
 	void Enqueue(shared_ptr<ClientSession> session, unsigned char* data, size_t length);
 	void Dequeue();
 
-	void Run();
+	void Run();*/
 };
-

@@ -1,6 +1,5 @@
 #pragma once
 #include "stdafx.h"
-#include "TSingleton.h"
 
 class ClientSession;
 class SessionManager : public TSingleton<SessionManager>

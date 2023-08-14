@@ -8,18 +8,6 @@ const int CHAT_SIZE = 50;
 const int MAX_ROOM_USER = 4;
 const int MAX_ROOM_SIZE = 10;
 
-//const char CS_LOGIN = 1;
-//const char CS_LEAVE_PLAYER = 2;
-//const char CS_SELECT_ROOM = 3;
-//const char CS_CHAT = 4;
-
-//const char SC_LOGIN_OK = 1;
-//const char SC_ENTER_LOBBY = 2;
-//const char SC_LEAVE_PLAYER = 3;
-//const char SC_ROOM_INFO = 4;
-//const char SC_ENTER_ROOM = 5;
-//const char SC_CHAT = 6;
-
 enum class PacketType : char
 {
 	CS_LOGIN = 11,

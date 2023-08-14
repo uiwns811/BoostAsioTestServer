@@ -3,7 +3,8 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include "protocol.h"
+#include "../Common/protocol.h"
+#include "../Common/TSingleton.h"
 
 #include <vector>
 #include <string>

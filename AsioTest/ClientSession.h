@@ -16,10 +16,6 @@ public:
 	wstring m_name;
 	weak_ptr<Room> m_room;
 
-private:
-	void ProcessPacket(unsigned char* packet, int id);
-	void ConstructData(unsigned char* buf, size_t io_byte);
-
 public:
 	ClientSession(tcp::socket socket) : m_socket(std::move(socket))
 	{

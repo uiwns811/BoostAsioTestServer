@@ -1,47 +1,28 @@
 #pragma once
 #include "stdafx.h"
 
+class ServerSession;
 class Client
 {
 private:
 	tcp::socket m_socket;
-	boost::asio::io_context io_context;
 	tcp::endpoint endpoint;
+	unique_ptr<boost::thread> m_thread;
 
-	unsigned char recvbuff[BUF_SIZE];
-	unsigned char remainData[BUF_SIZE];
-	int prev_data_size;
-
-	wstring m_name;
-
+	bool m_bConnected = false;
 public:
-	bool isChatting = false;
+	shared_ptr<ServerSession> m_session;
 
 public:
 	Client(boost::asio::io_context& io_context, const tcp::endpoint& endpoints) : m_socket(io_context), endpoint(endpoints)
 	{
-		wcout << "ID ют╥б : ";
-		wcin >> m_name;
-		Connect();
+		RegisterConnect();
 	}
 
-	Client(boost::asio::io_context& io_context) : m_socket(io_context)
-	{
+	void RegisterConnect();
 
-	}
+	void Run(boost::asio::io_context* io_context);
+	void Shutdown();
 
-	void Connect();
-
-	void OnConnected();
-
-	void RegisterSend(void* packet, std::size_t length);
-	void RegisterRecv();
-
-	void ProcessRecv(const boost::system::error_code& ec, std::size_t length);
-	void ConstructData(unsigned char* buf, size_t io_byte);
-	void ProcessPacket(unsigned char* packet);
-
-	void SendLoginPacket(wstring name);
-
-	void SendChatPacket(wstring chat);
+	bool IsConnected() { return m_bConnected; }
 };

@@ -19,9 +19,8 @@ int main()
 		server.Shutdown();
 		return 0;
 	}
-	catch (exception& ex)
-	{
-		std::cout << "Exception : " << ex.what() << std::endl;
+	catch (exception& ex) {
+		cout << "Exception : " << ex.what() << endl;
 		return -1;
 	}
 }

@@ -1,6 +1,5 @@
 #pragma once
 #include "stdafx.h"
-#include "TSingleton.h"
 
 class Room;
 class RoomManager : public TSingleton<RoomManager>
