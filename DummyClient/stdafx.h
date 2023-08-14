@@ -10,6 +10,7 @@
 #include <cstring>
 #include <queue>
 #include <unordered_map>
+#include <algorithm>
 
 using namespace std;
 using boost::asio::ip::tcp;

@@ -12,8 +12,6 @@ private:
 	int prev_data_size;
 
 private:
-	void ParseData();
-
 	void BindHandler(PacketType, void(PacketManager::* handler)(shared_ptr<ClientSession>, unsigned char*));
 
 	void CSLoginHandler(shared_ptr<ClientSession> session, unsigned char* packet);
@@ -26,7 +24,5 @@ public:
 
 	void Enqueue(shared_ptr<ClientSession> session, unsigned char* data, size_t length);
 	void Dequeue();
-
-	void Run();
 };
 

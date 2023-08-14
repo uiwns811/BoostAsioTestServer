@@ -1,5 +1,6 @@
 #include "Client.h"
 #include "ServerSession.h"
+#include "PacketManager.h"
 
 void Client::RegisterConnect()
 {
@@ -7,6 +8,7 @@ void Client::RegisterConnect()
 		if (!ec) {
 			m_session = make_shared<ServerSession>(move(m_socket));
 			m_bConnected = true;
+			PacketManager::GetInstance()->Init(m_session->shared_from_this());
 			m_session->ProcessConnect();
 		}
 		else

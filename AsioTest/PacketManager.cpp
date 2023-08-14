@@ -40,15 +40,6 @@ void PacketManager::Enqueue(shared_ptr<ClientSession> session, unsigned char* pa
 	}
 }
 
-void PacketManager::ParseData()
-{
-}
-
-void PacketManager::Run()
-{
-	
-}
-
 void PacketManager::CSLoginHandler(shared_ptr<ClientSession> session, unsigned char* packet)
 {
 	CS_LOGIN_PACKET* p = reinterpret_cast<CS_LOGIN_PACKET*>(packet);
